@@ -1,4 +1,44 @@
 simpling
 ========
 
-Simulation and sampling library for Bayesian computations
+*simpling* is a simulation and sampling library, primarily targeted towards Bayesian calculations.
+
+== Overview
+
+Our initial goal is to provide generic and reusable implementations of some of the available Markov chain Monte Carlo methods. These algorithms allow the user to sample from a probability distribution of interest, typically the a posteriori distribution over the model parameters. Such sampling machinery can be used for numerical computation of an integral, a common task in Bayesian statistics.
+
+== Algorithms
+
+* Metropolis-Hastings MCMC
+* Hybrid MCMC
+* Reversible jump MCMC
+* Langevin MCMC
+* Metropolis Coupled MCMC
+* Missing Completed Metropolis Coupled MCMC
+
+== Development
+
+*simpling* only depends on the ##C++11## standard, and should compile with common compilers like http://gcc.gnu.org/[gcc], msvc or http://clang.llvm.org/[clang].
+The code aims to be as generic as possible.
+
+For testing purposes, https://github.com/philsquared/Catch seems reasonable.
+
+== Links
+
+* http://mlg.eng.cam.ac.uk/zoubin/tut06/mcmc.pdf
+* http://www.cs.utoronto.ca/~radford/ftp/ham-mcmc.pdf
+* http://www.statistik.lmu.de/institut/ag/biostat/teaching/numbay2006/HybridMCMC/hybridmcmc4.pdf
+* http://www.ucl.ac.uk/statistics/research/csi/themes/rmhmc
+* http://darrenjw.wordpress.com/2013/09/29/parallel-tempering-and-metropolis-coupled-mcmc/
+* http://www.stat.duke.edu/~scs/Courses/Stat376/Papers/GibbsFieldEst/Geyer.1991.pdf
+* http://bioinformatics.oxfordjournals.org/content/early/2004/01/22/bioinformatics.btg427.full.pdf
+* http://cacs.usc.edu/education/cs653/Atchande-MCMCMC-StatComp10.pdf
+* http://cui.unige.ch/~gesmundo/misc/RJMCMC.pdf
+* http://people.ee.duke.edu/~lcarin/rjmcmc_20090613.pdf
+* http://www.maths.bris.ac.uk/~mapjg/papers/RJMCMCBka.pdf
+* http://people.ee.duke.edu/~lcarin/Hui7.8.2013.pdf
+* http://www.dcs.gla.ac.uk/inference/rmhmc/
+
+== License
+
+*simpling* is licensed under the European Union Public License.
