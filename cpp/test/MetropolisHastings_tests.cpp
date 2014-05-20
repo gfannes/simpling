@@ -89,6 +89,25 @@ namespace  {
                 const double width_ = (max_-min_)/NrBins;
                 std::array<unsigned long, NrBins> bins_;
         };
+
+    class Acceptance
+    {
+        public:
+            void add(bool accepted)
+            {
+                if (accepted)
+                    ++nrAccepted_;
+                ++nrTotal_;
+            }
+            double rate() const {return double(nrAccepted_)/nrTotal_;}
+            void stream(std::ostream &os) const
+            {
+                os << "Acceptance rate: " << rate() << std::endl;
+            }
+        private:
+            unsigned long nrAccepted_;
+            unsigned long nrTotal_;
+    };
 } 
 
 int main()
@@ -107,22 +126,20 @@ int main()
     }
     assert(mhmc.isInitialized());
 
-    //Generation and collection into histogram
-    const unsigned long NrToGenerate = 1000000;
-    unsigned long nrAccepted = 0;
+    //Generation, collection into histogram and computation of acceptance rate
+    Acceptance acceptance;
     Histogram<40> histogram(-mhmc.target().radius, mhmc.target().radius);
-    for (int i = 0; i < NrToGenerate;)
+    for (int i = 0; i < 1000000; ++i)
     {
         if (!mhmc(engine))
+            //Something went wrong
             continue;
-        ++i;
         histogram.add(mhmc.value());
-        if (mhmc.isNewState())
-            ++nrAccepted;
+        acceptance.add(mhmc.isNew());
     }
 
     histogram.stream(std::cout, 80);
-    std::cout << nrAccepted << " out of " << NrToGenerate << " states where accepted: " << double(nrAccepted)/NrToGenerate << std::endl;
+    acceptance.stream(std::cout);
 
     return 0;
 }

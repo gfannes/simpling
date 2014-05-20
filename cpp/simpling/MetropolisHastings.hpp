@@ -26,8 +26,11 @@ namespace simpling {
                 Proposal &proposal() {return static_cast<Proposal&>(*this);}
                 const Proposal &proposal() const {return static_cast<const Proposal&>(*this);}
 
+                //Indicates if the chain is initialized. This does not mean it is in its equilibrium distribution though.
                 bool isInitialized() const {return isInitialized_;}
-                bool isNewState() const {return isNewState_;}
+                //Indicates if the current state value iss different from the previous (i.e., the newly
+                //generated state was accepted)
+                bool isNew() const {return isNew_;}
 
                 //The current state of the chain
                 const result_type &value() const
@@ -58,7 +61,7 @@ namespace simpling {
 
                         //We have a candidate, so nothing can fail anymore. By default, we indicate that
                         //this new state is rejected
-                        isNewState_ = false;
+                        isNew_ = false;
 
                         double candidate_lp;
                         if (!Target::log_prob(candidate_lp, candidate))
@@ -74,7 +77,7 @@ namespace simpling {
                             //We accept the newly generated candidate: move it, together with its prob
                             x_ = std::move(candidate);
                             log_prob_ = candidate_lp;
-                            isNewState_ = true;
+                            isNew_ = true;
                         }
 
                         return true;
@@ -95,13 +98,13 @@ namespace simpling {
                             return true;
                         if (!Proposal::initialize(x_, g))
                             return false;
-                        isNewState_ = isInitialized_ = Target::log_prob(log_prob_, x_);
+                        isNew_ = isInitialized_ = Target::log_prob(log_prob_, x_);
                         return isInitialized_;
                     }
 
                 //Tracks if the chain is already initialized
                 bool isInitialized_ = false;
-                bool isNewState_ = false;
+                bool isNew_ = false;
                 //The state itself
                 result_type x_;
                 //Cache of Target::log_prob(lp, x_)
