@@ -67,7 +67,14 @@ namespace  {
         class Histogram
         {
             public:
-                Histogram(double min, double max): min_(min), max_(max) {}
+                Histogram(double min, double max):
+					min_(min), max_(max)
+			{
+				for (auto &cnt: bins_)
+					if (cnt != 0)
+						//This is a compiler error, std::array should be default initialized, which is 0 for unsigned long
+						cnt = 0;
+			}
                 bool add(double v)
                 {
                     if (v < min_)
@@ -116,8 +123,8 @@ namespace  {
                 os << "Acceptance rate: " << rate() << std::endl;
             }
         private:
-            unsigned long nrAccepted_;
-            unsigned long nrTotal_;
+            unsigned long nrAccepted_ = 0;
+            unsigned long nrTotal_ = 0;
     };
 } 
 
