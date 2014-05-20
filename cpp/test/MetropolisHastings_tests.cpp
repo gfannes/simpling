@@ -33,7 +33,7 @@ namespace  {
                 bool initialize(result_type &x, G &g)
                 {
                     x = initialization_noise(g);
-                    std::cout << x << std::endl;
+                    std::cout << "Initialization: " << x << std::endl;
                     return true;
                 }
 
@@ -122,13 +122,13 @@ int main()
     for (int i = 0; i < 1000000; ++i)
     {
         if (!mhmc(engine))
-            std::cout << "Problem in iteration " << i << std::endl;
+            std::cout << "Problem in iteration " << i << ", probably with the initialization" << std::endl;
     }
     assert(mhmc.isInitialized());
 
     //Generation, collection into histogram and computation of acceptance rate
-    Acceptance acceptance;
     Histogram<40> histogram(-mhmc.target().radius, mhmc.target().radius);
+    Acceptance acceptance;
     for (int i = 0; i < 1000000; ++i)
     {
         if (!mhmc(engine))
@@ -138,6 +138,7 @@ int main()
         acceptance.add(mhmc.isNew());
     }
 
+    //The results
     histogram.stream(std::cout, 80);
     acceptance.stream(std::cout);
 
