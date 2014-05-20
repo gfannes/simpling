@@ -40,15 +40,24 @@ namespace  {
                 }
 
             //Rule of thumb is to aim for acceptance rate in [0.5, 0.85]
-            Noise generation_noise = Noise(0.0, 0.5);
+            Noise generation_noise = Noise(0.1, 0.5);
             template <typename G>
                 bool generate(result_type &x, double &ratio, const result_type &prev, G &g)
                 {
-                    //Our simple proposal distribution is symmetric, so ratio == 1.0
-                    ratio = 1.0;
+                    //Generate a new proposal state starting from the previous
                     x = prev + generation_noise(g);
+                    //Normally, the proposal distribution is chosen to be symmetric (generation_noise.mean() == 0.0),
+                    //in which case ratio should be set to 1.0 always.
+                    //If this is _not_ the case, make sure you adjust for it correctly.
+                    ratio = generation_density_unnorm(prev, x)/generation_density_unnorm(x, prev);
                     return true;
                 }
+            //Density of the new proposal state x being generated starting from given
+            double generation_density_unnorm(double x, double given) const
+            {
+                const double d = (x - (given+generation_noise.mean()))/generation_noise.stddev();
+                return std::exp(-0.5*d*d);
+            }
     };
 
     //We combine the wanted Target distribution together with the Proposal distribution into our Metropolis-Hastings markov chain
