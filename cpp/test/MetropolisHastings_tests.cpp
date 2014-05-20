@@ -1,7 +1,7 @@
 #include "simpling/MetropolisHastings.hpp"
 #include <iostream>
-#include <map>
 #include <algorithm>
+#include <array>
 
 namespace  { 
 
@@ -11,6 +11,7 @@ namespace  {
             typedef double result_type;
             double radius = 2.0;
 
+            //A ^-shaped distribution centered around 0 with domain [-radius, radius]
             bool log_prob(result_type &lp, result_type x) const
             {
                 const auto d = std::abs(x);
@@ -19,8 +20,9 @@ namespace  {
                 lp = std::log(radius - d);
                 return true;
             }
-        private:
     };
+
+    //Initialization and generation of potential new states for the markov chain
     class Proposal
     {
         public:
@@ -47,9 +49,9 @@ namespace  {
                     x = prev + generation_noise(g);
                     return true;
                 }
-        private:
     };
 
+    //We combine the wanted Target distribution together with the Proposal distribution into our Metropolis-Hastings markov chain
     typedef simpling::MetropolisHastings<Target, Proposal> MyMHMC;
 
     template <size_t NrBins>
@@ -71,10 +73,10 @@ namespace  {
 
                     return true;
                 }
-                void stream(std::ostream &os, unsigned long max) const
+                void stream(std::ostream &os, unsigned long maxNrCols) const
                 {
-                    unsigned long m = *std::max_element(bins_.begin(), bins_.end());
-                    const double scale = double(max)/m;
+                    unsigned long maxBinCnt = *std::max_element(bins_.begin(), bins_.end());
+                    const double scale = double(maxNrCols)/maxBinCnt;
                     unsigned long total = 0;
                     for (auto cnt: bins_)
                     {
@@ -134,11 +136,12 @@ int main()
         if (!mhmc(engine))
             //Something went wrong
             continue;
+        //This is a good value, record it into the histogram and the acceptance rate
         histogram.add(mhmc.value());
         acceptance.add(mhmc.isNew());
     }
 
-    //The results
+    //Print the histogram and acceptance rate
     histogram.stream(std::cout, 80);
     acceptance.stream(std::cout);
 
