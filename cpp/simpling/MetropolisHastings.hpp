@@ -7,8 +7,9 @@
 namespace simpling { 
 
     //User should ensure that Proposal::initialize() and Proposal::generate()
-    //generates a value compatible with the layout of Target
-    //Target: The target distribution to sample from
+    //generate a value compatible with the layout of Target
+    //Target: The target distribution you want to sample from
+    //        Provide log_prob(logprob, location), the logarithm of the unnormalized target density
     //Proposal: The distribution that generates the initial state, and candidate states based on the
     //previous state
     template <typename Target, typename Proposal>
@@ -24,6 +25,9 @@ namespace simpling {
                 //Access to the proposal distribution
                 Proposal &proposal() {return static_cast<Proposal&>(*this);}
                 const Proposal &proposal() const {return static_cast<const Proposal&>(*this);}
+
+                bool isInitialized() const {return isInitialized_;}
+                bool isNewState() const {return isNewState_;}
 
                 //The current state of the chain
                 const result_type &value() const
@@ -44,7 +48,7 @@ namespace simpling {
                             //Could not initialize the chain
                             return false;
 
-                        //Generate a new candidate, together with the ratio of the proposal probs
+                        //Generate a new candidate, together with the ratio of the proposal probs (p(x_|cand)/p(cand|x_))
                         result_type candidate;
                         double ratio = -1;
                         if (!Proposal::generate(candidate, ratio, const_cast<const result_type &>(x_), g))
@@ -52,13 +56,25 @@ namespace simpling {
                             return false;
                         assert(ratio >= 0);
 
-                        const double candidate_lp = Target::log_prob(candidate);
+                        //We have a candidate, so nothing can fail anymore. By default, we indicate that
+                        //this new state is rejected
+                        isNewState_ = false;
+
+                        double candidate_lp;
+                        if (!Target::log_prob(candidate_lp, candidate))
+                        {
+                            //This candidate has zero probability, we always reject it
+                            //We still return true, this is not an error.
+                            return true;
+                        }
+
                         const double accept_prob = ratio*std::exp(candidate_lp - log_prob_);
                         if (accept_prob >= 1.0 or with_prob_(accept_prob, g))
                         {
                             //We accept the newly generated candidate: move it, together with its prob
                             x_ = std::move(candidate);
                             log_prob_ = candidate_lp;
+                            isNewState_ = true;
                         }
 
                         return true;
@@ -77,17 +93,18 @@ namespace simpling {
                     {
                         if (isInitialized_)
                             return true;
-                        if (Proposal::initialize(x_, g))
+                        if (!Proposal::initialize(x_, g))
                             return false;
-                        log_prob_ = Target::log_prob(x_);
-                        return true;
+                        isNewState_ = isInitialized_ = Target::log_prob(log_prob_, x_);
+                        return isInitialized_;
                     }
 
                 //Tracks if the chain is already initialized
                 bool isInitialized_ = false;
+                bool isNewState_ = false;
                 //The state itself
                 result_type x_;
-                //Cache of Target::log_prob(x_)
+                //Cache of Target::log_prob(lp, x_)
                 double log_prob_;
                 //A uniform distribution used to decide if the candidate state should be accepted or not
                 std::uniform_real_distribution<double> urd;
